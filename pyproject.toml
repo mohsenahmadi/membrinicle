@@ -1,0 +1,36 @@
+[project]
+name = "membrinicle"
+version = "0.1.0"
+description = "Local-first personal memory engine built on brinicle"
+requires-python = ">=3.11"
+dependencies = [
+    "brinicle",
+    "fastapi",
+    "uvicorn[standard]",
+    "watchdog",
+    "pymupdf",
+    "python-docx",
+    "rumps",
+    "pydantic",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+    "ruff",
+    "black",
+]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 88
+select = ["E", "F", "I", "N", "W"]
+
+[tool.black]
+target-version = ["py311"]
+line-length = 88
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
