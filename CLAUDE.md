@@ -159,10 +159,10 @@ Write an ADR in `docs/adr/` for every significant architectural choice: new depe
 ## CI checks (all must pass before merge)
 
 ```bash
-ruff check daemon/ tests/
-black --check daemon/ tests/
+ruff check src/daemon/ tests/
+black --check src/daemon/ tests/
 pytest tests/
-grep -r "import brinicle" daemon/ | grep -v "indexer.py" && exit 1 || exit 0
+grep -r "import brinicle" src/daemon/ | grep -v "indexer.py" && exit 1 || exit 0
 ```
 
 ---
@@ -176,29 +176,31 @@ grep -r "import brinicle" daemon/ | grep -v "indexer.py" && exit 1 || exit 0
   README.md
   CLAUDE.md
   pyproject.toml
-  daemon/
-    server.py
-    watcher.py
-    extractor.py
-    indexer.py
-    notifier.py
-    mcp.py
-    config.py
-  web/
-    index.html
-    app.js
-    style.css
-  extension/
-    src/
-      content.ts
-      background.ts
-      popup.ts
-      chrome_api.ts
-    manifest.json
-    tsconfig.json
-  installer/
-    build_dmg.sh
-    LaunchAgent.plist.template
+  src/
+    daemon/
+      server.py
+      watcher.py
+      extractor.py
+      indexer.py
+      notifier.py
+      mcp.py
+      config.py
+    web/
+      index.html
+      app.js
+      style.css
+    extension/
+      src/
+        content.ts
+        background.ts
+        popup.ts
+        chrome_api.ts
+      manifest.json
+      tsconfig.json
+    installer/
+      build_dmg.sh
+      LaunchAgent.plist.template
+  data/
   tests/
     test_phase0.py
     test_indexer.py

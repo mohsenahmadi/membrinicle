@@ -714,7 +714,7 @@ SQLite is not in this stack.
 
 - Python 3.11, typed throughout with `from __future__ import annotations`
 - `TypedDict` for all structured data shapes; no `Any`
-- All brinicle engine access through `indexer.py` only - no other module imports brinicle; enforced in CI by: `grep -r "import brinicle" daemon/ | grep -v "indexer.py" && exit 1 || exit 0`
+- All brinicle engine access through `indexer.py` only - no other module imports brinicle; enforced in CI by: `grep -r "import brinicle" src/daemon/ | grep -v "indexer.py" && exit 1 || exit 0`
 - All brinicle calls inside `async with lock` - no exceptions to this rule
 - No raw JSON reads/writes outside `config.py`
 - `ruff` for linting, `black` for formatting, both enforced in CI
@@ -734,34 +734,41 @@ SQLite is not in this stack.
   LICENSE
   COMMERCIAL.md
   README.md
-  daemon/
-    server.py
-    watcher.py
-    extractor.py
-    indexer.py
-    notifier.py
-    mcp.py
-    config.py
-  web/
-    index.html
-    app.js
-    style.css
-  extension/
-    src/
-      content.ts
-      background.ts
-      popup.ts
-      chrome_api.ts
-    manifest.json
-    tsconfig.json
-  installer/
-    build_dmg.sh
-    LaunchAgent.plist.template
+  CLAUDE.md
+  pyproject.toml
+  src/
+    daemon/
+      server.py
+      watcher.py
+      extractor.py
+      indexer.py
+      notifier.py
+      mcp.py
+      config.py
+    web/
+      index.html
+      app.js
+      style.css
+    extension/
+      src/
+        content.ts
+        background.ts
+        popup.ts
+        chrome_api.ts
+      manifest.json
+      tsconfig.json
+    installer/
+      build_dmg.sh
+      LaunchAgent.plist.template
+  data/
   tests/
     test_phase0.py
     test_indexer.py
     test_extractor.py
     test_server.py
+  docs/
+    adr/
+    2026-05-27-system-design.md
 ```
 
 ---
