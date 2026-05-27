@@ -1,32 +1,70 @@
 # CLAUDE.md
 
-## What this repository is
+## What this project is
 
-Membrinicle is a local-first personal memory engine. It indexes files and web pages, stores everything on the local machine using brinicle (a disk-first C++ HNSW search engine), and serves accumulated knowledge to AI tools via MCP and REST API.
+Membrinicle is a local-first personal memory engine. It indexes the files you own and the web pages you read, stores everything on your machine using brinicle (a disk-first C++ HNSW search engine), and serves your accumulated knowledge to any AI tool via MCP and REST API.
+
+The core problem it solves: every AI session starts from zero. Membrinicle closes that gap by making your own knowledge continuously available to any AI tool, privately, without sending data anywhere.
+
+Code name: Membrinicle
+Underlying engine: [brinicle](https://github.com/bicardinal/brinicle) (Apache 2.0)
+
+---
+
+## Current state (as of 2026-05-27)
+
+**Phase:** 0 - Repository initialized, Phase 0 verification tests not yet run
+
+**Stack decision:**
+- Daemon: Python 3.11 (required by brinicle Python bindings)
+- Search: brinicle ItemSearchEngine (dim=96, alpha=0.0) + AutocompleteEngine (dim=48)
+- HTTP server: FastAPI + uvicorn (workers=1, non-negotiable)
+- File watching: watchdog
+- Packaging: PyInstaller (.app bundle for macOS)
+- Chrome extension: TypeScript, Manifest V3
+
+**Open before Phase 1 can begin:**
+- Run all eight Phase 0 verification scripts (V0 through V7) in `tests/test_phase0.py`
+- Record results in `docs/phase0-results.md`
+- Implement any documented fallbacks for tests that fail before proceeding
+
+---
+
+## GitHub repository
 
 Remote: git@github.com:mohsenahmadi/membrinicle.git
 
 ---
 
-## Before any session
+## Key file paths
+
+| Purpose | Path |
+|---|---|
+| System design | `docs/2026-05-27-system-design.md` |
+| Architecture decisions | `docs/adr/` |
+| Phase 0 results | `docs/phase0-results.md` (created during Phase 0) |
+| Engineering standard | `standards/engineering-standard.md` (DiMo-ThoughtOS root) |
+
+---
+
+## Rules before any session
 
 1. Read `docs/2026-05-27-system-design.md` for the full architecture and build plan.
-2. Check current phase and open work before writing any code.
-3. Never install dependencies or write code outside a feature branch.
-4. All brinicle engine access in the daemon goes through `indexer.py` only.
-5. All brinicle calls must go through a single `asyncio.Lock`.
-6. `uvicorn` must always be launched with `workers=1`. brinicle index files have no inter-process locking. Two worker processes sharing the same index path will corrupt it silently.
-7. Log decisions and changes at the end of each session in `docs/YYYY-MM-DD-session.md`.
+2. Never install dependencies or write code outside a feature branch.
+3. All brinicle engine access in the daemon goes through `indexer.py` only.
+4. All brinicle calls must go through a single `asyncio.Lock` - no exceptions.
+5. `uvicorn` must always be launched with `workers=1`. brinicle index files have no inter-process locking. Two worker processes sharing the same index path will corrupt it silently.
+6. Log decisions at the end of each session in a dated file under `docs/`.
 
 ---
 
 ## Engineering standard
 
-Every rule below is binding. The test for each decision: can this be debugged at 2am with no context beyond what is written here?
+All code in this project is governed by `standards/engineering-standard.md` in DiMo-ThoughtOS. Every rule below is binding. The test: can this be debugged at 2am with no context beyond what is written here?
 
 ### Naming
 
-- Full words only. No abbreviations. `requestCorrelationId` not `corrId`. `isIndexReady` not `ready`.
+- Full words, no abbreviations. `requestCorrelationId` not `corrId`. `isIndexReady` not `ready`.
 - Name for intent, not type. `fetchResultsByQuery` not `getResults`.
 - Booleans as assertions. `isIndexReady`, `hasPermission`, `canWrite`. Never `ready`, `permission`, `write`.
 - Constants in SCREAMING_SNAKE_CASE. `MAX_BATCH_SIZE`, `SETUP_WINDOW_SECONDS`.
@@ -37,12 +75,12 @@ Every rule below is binding. The test for each decision: can this be debugged at
 - Python 3.11, typed throughout with `from __future__ import annotations`.
 - `TypedDict` for all structured data shapes. No `Any` anywhere.
 - Guard clauses first - validate and return at the top, happy path at the bottom.
-- No boolean parameters that change behavior. That is two functions pretending to be one.
-- Functions stay under 30 lines. If longer, extract.
+- No boolean parameters that change behavior. Two functions, not one with a flag.
+- Functions stay under 30 lines. Extract if longer.
 - Functions that mutate state are named to say so: `updateWatchedFolders`, not `processConfig`.
-- Pydantic models for all HTTP request and response bodies. Do not trust data that crosses an HTTP boundary without validation.
+- Pydantic models for all HTTP request and response bodies. Do not trust data crossing an HTTP boundary without validation.
 - Typed error classes for all domain failures. Never raise bare `Exception` or strings.
-- Structured JSON logs on every error:
+- Structured JSON logs on every error - include `action`, `correlation_id`, and `error`:
 
 ```python
 logger.error("Failed to finalize index batch", extra={
@@ -57,7 +95,7 @@ raise
 - Never swallow exceptions. Log with context, then re-raise.
 - No `TODO` or `FIXME` in code. Use the issue tracker.
 - No commented-out code. Git history has it.
-- Comments explain WHY only, one line maximum. If deleting the comment would not confuse a competent engineer, delete it.
+- Comments explain WHY only, one line maximum. If deleting it would not confuse a competent engineer, delete it.
 
 ### TypeScript
 
@@ -99,12 +137,13 @@ One logical change per commit. If the message needs "and", split the commit. No 
 
 ### Architecture decisions
 
-Write an ADR in `docs/adr/` for every significant architectural choice: new dependency, infrastructure component, or decision with trade-offs that will matter later. Link the ADR from the PR that introduces the change. See existing ADRs in `docs/adr/` for the required format.
+Write an ADR in `docs/adr/` for every significant architectural choice: new dependency, infrastructure component, or decision with trade-offs that will matter later. Link the ADR from the PR that introduces the change.
 
 ### Observability
 
 - Structured JSON logs only in daemon production paths. No bare `print()`.
-- Every HTTP request receives a `X-Correlation-ID` header (generated in middleware if absent). Pass it through all log entries for that request.
+- Every HTTP request receives a `X-Correlation-ID` header (generated in FastAPI middleware if absent).
+- Pass the correlation ID through all log entries for that request.
 - Every catch block logs `action`, `correlation_id`, and `error` at minimum.
 - No dead exports, no orphan modules. If a function has no consumer, delete it.
 
@@ -117,7 +156,7 @@ Write an ADR in `docs/adr/` for every significant architectural choice: new depe
 
 ---
 
-## CI checks (required to pass before merge)
+## CI checks (all must pass before merge)
 
 ```bash
 ruff check daemon/ tests/
